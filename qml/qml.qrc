@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>PathModel.qml</file>
+    </qresource>
+</RCC>
