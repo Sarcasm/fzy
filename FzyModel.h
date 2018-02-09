@@ -17,6 +17,7 @@ public:
     Value = Qt::UserRole + 1,
     MatchIndices,
   };
+  Q_ENUM(Role);
 
   FzyModel(QObject *parent = nullptr);
 

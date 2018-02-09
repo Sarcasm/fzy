@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+#include <QMetaEnum>
+
 FzyModel::FzyModel(QObject *parent) : QAbstractListModel(parent) {
   m_strings = {
       "upower",
@@ -109,8 +111,22 @@ QVariant FzyModel::headerData(int section, Qt::Orientation orientation,
 
 QHash<int, QByteArray> FzyModel::roleNames() const {
   QHash<int, QByteArray> roles;
-  roles[static_cast<int>(Role::Value)] = QByteArrayLiteral("value");
-  roles[static_cast<int>(Role::MatchIndices)] = QByteArrayLiteral("matchIndices");
+
+  const auto &roleMeta = QMetaEnum::fromType<Role>();
+  for (int i = 0; i < roleMeta.keyCount(); ++i) {
+    const auto v = roleMeta.value(i);
+
+    switch (static_cast<Role>(v)) {
+    case Role::Value:
+      roles[v] = QByteArrayLiteral("value");
+      break;
+
+    case Role::MatchIndices:
+      roles[v] = QByteArrayLiteral("matchIndices");
+      break;
+    }
+  }
+
   return roles;
 }
 
