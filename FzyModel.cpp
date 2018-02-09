@@ -66,17 +66,20 @@ void FzyModel::setFilter(const QString &newFilter) {
     return;
   }
 
+  beginResetModel();
+
   m_filter = newFilter;
   emit filterChanged(m_filter);
 
-  beginResetModel();
   m_filterView.clear();
-  std::string prefix = m_filter.toUtf8().constData();
-  for (const std::string &s : m_strings) {
+  const QByteArray &ba = m_filter.toUtf8();
+  std::string_view prefix(ba.constData(), ba.size());
+  for (const auto &s : m_strings) {
     if (!s.compare(0, prefix.length(), prefix)) {
       m_filterView.push_back(s);
     }
   }
+
   endResetModel();
 }
 
@@ -119,13 +122,15 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
     return {};
   }
 
+  const std::string_view value = m_filterView[index.row()];
+
   if (role == Qt::DisplayRole) {
     role = static_cast<int>(Role::Value);
   }
 
   switch (static_cast<Role>(role)) {
   case Role::Value:
-    return QString::fromStdString(std::string(m_filterView[index.row()]));
+    return QString::fromUtf8(value.data(), value.size());
 
   case Role::MatchIndices:
     return QString("some indices");
