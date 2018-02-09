@@ -6,6 +6,54 @@ FzyModel::FzyModel(QObject *parent) : QAbstractListModel(parent) {
   m_strings = {
       "upower",
       "usermod",
+      "dolphin-emu-qt2",
+      "rst2odt.py",
+      "pinky",
+      "gst-inspect-1.0",
+      "thresholder.py",
+      "ttf2pk",
+      "ldbdel",
+      "pdfcrop",
+      "sponge",
+      "naming.py",
+      "kdostartupconfig5",
+      "repstopdf",
+      "xmode2",
+      "cmsutil",
+      "gvfs-monitor-file",
+      "ninja",
+      "symilar",
+      "llvm-lib",
+      "jay",
+      "kshell5",
+      "drill",
+      "tftopl",
+      "tox-quickstart",
+      "fuser",
+      "gm",
+      "filan",
+      "vde_autolink",
+      "updvitomp",
+      "makeglossaries-lite",
+      "rst2xetex",
+      "ocsptool",
+      "gvfs-save",
+      "as",
+      "weston-editor",
+      "emacsclient",
+      "weston-confine",
+      "dolphin",
+      "combine",
+      "sim_server",
+      "zvbi-chains",
+      "sourceweb",
+      "cdda-player",
+      "sgml2xml",
+      "kpsexpand",
+      "opencv_waldboost_detector",
+      "ntfscp",
+      "ttf2tfm",
+      "pdflatexpicscale",
   };
 
   m_filterView.assign(m_strings.begin(), m_strings.end());
@@ -17,27 +65,17 @@ void FzyModel::setFilter(const QString &newFilter) {
   }
 
   m_filter = newFilter;
-
-  if (m_filter.isEmpty()) {
-    beginRemoveRows(QModelIndex(), 2, 2);
-    m_strings.resize(2);
-    m_filterView.assign(m_strings.begin(), m_strings.end());
-    endRemoveRows();
-  } else if (m_strings.size() == 2) {
-    beginInsertRows(QModelIndex(), m_strings.size(), m_strings.size());
-    m_strings.resize(3);
-    m_strings[2] = m_filter.toUtf8().constData();
-    m_filterView.assign(m_strings.begin(), m_strings.end());
-    endInsertRows();
-  } else {
-    m_strings[2] = m_filter.toUtf8().constData();
-    m_filterView.assign(m_strings.begin(), m_strings.end());
-    const QModelIndex idx = index(2);
-    emit dataChanged(idx, idx);
-  }
-
-
   emit filterChanged(m_filter);
+
+  beginResetModel();
+  m_filterView.clear();
+  std::string prefix = m_filter.toUtf8().constData();
+  for (const std::string &s : m_strings) {
+    if (!s.compare(0, prefix.length(), prefix)) {
+      m_filterView.push_back(s);
+    }
+  }
+  endResetModel();
 }
 
 int FzyModel::rowCount(const QModelIndex &parent) const {
@@ -48,29 +86,6 @@ int FzyModel::rowCount(const QModelIndex &parent) const {
   return m_filterView.size();
 }
 
-// https://forum.qt.io/topic/78406/how-to-update-qabstractitemmodel-view-when-a-data-is-updated/5
-QVariant FzyModel::data(const QModelIndex &index, int role) const {
-  // necessary?
-  if (!index.isValid()) {
-    return QVariant();
-  }
-  Q_ASSERT(index.model() == this);
-  // end necessary?
-
-  if (index.row() < 0 ||
-      static_cast<unsigned>(index.row()) >= m_filterView.size()) {
-    return QVariant();
-  }
-
-  switch (role) {
-  case Qt::DisplayRole:
-    return QString::fromStdString(std::string(m_filterView[index.row()]));
-
-  default:
-    return QVariant();
-  }
-}
-
 QVariant FzyModel::headerData(int section, Qt::Orientation orientation,
                               int role) const {
   if (role != Qt::DisplayRole)
@@ -79,11 +94,10 @@ QVariant FzyModel::headerData(int section, Qt::Orientation orientation,
   if (orientation == Qt::Horizontal) {
     switch (section) {
     case 0:
-      return tr("Element");
+      return tr("Value");
 
-    // TODO: match characters
-    // case 1:
-    //   return tr("Address");
+    case 1:
+      return tr("MatchIndices");
 
     default:
       return QVariant();
@@ -91,4 +105,28 @@ QVariant FzyModel::headerData(int section, Qt::Orientation orientation,
   }
 
   return QVariant();
+}
+
+QHash<int, QByteArray> FzyModel::roleNames() const {
+  QHash<int, QByteArray> roles;
+  roles[static_cast<int>(Role::Value)] = QByteArrayLiteral("value");
+  roles[static_cast<int>(Role::MatchIndices)] = QByteArrayLiteral("matchIndices");
+  return roles;
+}
+
+QVariant FzyModel::data(const QModelIndex &index, int role) const {
+  if (index.row() < 0 ||
+      static_cast<unsigned>(index.row()) >= m_filterView.size()) {
+    return {};
+  }
+
+  switch (static_cast<Role>(role)) {
+  case Role::Value:
+    return QString::fromStdString(std::string(m_filterView[index.row()]));
+
+  case Role::MatchIndices:
+    return QString("some indices");
+  }
+
+  return {};
 }

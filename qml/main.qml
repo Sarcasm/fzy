@@ -27,12 +27,8 @@ Window {
         TextField {
             id: textField
             Layout.fillWidth: true
-
-            onTextChanged: console.log("update")
-
             focus: true
-
-            placeholderText: qsTr("Font name...")
+            placeholderText: qsTr("Filter...")
         }
 
         ListView {
@@ -48,18 +44,8 @@ Window {
             delegate: Text {
                 id: name
                 height: 30
-                text: display
+                text: value
             }
-            /*
-
-            model: Qt.fontFamilies()
-            delegate: Text {
-                id: fontFamily
-                height: 30
-                text: modelData
-                font.family: modelData
-            }
-            */
         }
     }
 }

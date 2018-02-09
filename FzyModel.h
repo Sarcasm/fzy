@@ -13,13 +13,19 @@ class FzyModel : public QAbstractListModel {
       QString filter MEMBER m_filter WRITE setFilter NOTIFY filterChanged)
 
 public:
+  enum class Role : int {
+    Value = Qt::UserRole + 1,
+    MatchIndices,
+  };
+
   FzyModel(QObject *parent = nullptr);
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-  QVariant data(const QModelIndex &index,
-                int role = Qt::DisplayRole) const override;
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
+  QHash<int, QByteArray> roleNames() const override;
+  QVariant data(const QModelIndex &index,
+                int role = Qt::DisplayRole) const override;
 
 signals:
   void filterChanged(const QString &newFilter);
