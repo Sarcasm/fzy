@@ -88,27 +88,6 @@ int FzyModel::rowCount(const QModelIndex &parent) const {
   return m_filterView.size();
 }
 
-QVariant FzyModel::headerData(int section, Qt::Orientation orientation,
-                              int role) const {
-  if (role != Qt::DisplayRole)
-    return QVariant();
-
-  if (orientation == Qt::Horizontal) {
-    switch (section) {
-    case 0:
-      return tr("Value");
-
-    case 1:
-      return tr("MatchIndices");
-
-    default:
-      return QVariant();
-    }
-  }
-
-  return QVariant();
-}
-
 QHash<int, QByteArray> FzyModel::roleNames() const {
   static QHash<int, QByteArray> roles;
 
