@@ -110,20 +110,24 @@ QVariant FzyModel::headerData(int section, Qt::Orientation orientation,
 }
 
 QHash<int, QByteArray> FzyModel::roleNames() const {
-  QHash<int, QByteArray> roles;
+  static QHash<int, QByteArray> roles;
 
-  const auto &roleMeta = QMetaEnum::fromType<Role>();
-  for (int i = 0; i < roleMeta.keyCount(); ++i) {
-    const auto v = roleMeta.value(i);
+  if (roles.isEmpty()) {
+    roles = QAbstractListModel::roleNames();
 
-    switch (static_cast<Role>(v)) {
-    case Role::Value:
-      roles[v] = QByteArrayLiteral("value");
-      break;
+    const auto &roleMeta = QMetaEnum::fromType<Role>();
+    for (int i = 0; i < roleMeta.keyCount(); ++i) {
+      const auto v = roleMeta.value(i);
 
-    case Role::MatchIndices:
-      roles[v] = QByteArrayLiteral("matchIndices");
-      break;
+      switch (static_cast<Role>(v)) {
+      case Role::Value:
+        roles[v] = QByteArrayLiteral("value");
+        break;
+
+      case Role::MatchIndices:
+        roles[v] = QByteArrayLiteral("matchIndices");
+        break;
+      }
     }
   }
 
@@ -134,6 +138,10 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
   if (index.row() < 0 ||
       static_cast<unsigned>(index.row()) >= m_filterView.size()) {
     return {};
+  }
+
+  if (role == Qt::DisplayRole) {
+    role = static_cast<int>(Role::Value);
   }
 
   switch (static_cast<Role>(role)) {
