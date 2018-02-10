@@ -35,4 +35,31 @@ void substrHighlights(std::string_view needle, std::string_view haystack,
   std::iota(matches.begin(), matches.end(), start_pos);
 }
 
+bool simpleFuzzySearch(std::string_view needle, std::string_view haystack) {
+  std::string_view::size_type pos = 0;
+  for (auto ch : needle) {
+    pos = haystack.find(ch, pos);
+    if (pos == std::string_view::npos) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void simpleFuzzyHighlights(std::string_view needle, std::string_view haystack,
+                           std::vector<int> &matches) {
+  matches.clear();
+  std::string_view::size_type pos = 0;
+  for (auto ch : needle) {
+    pos = haystack.find(ch, pos);
+    if (pos == std::string_view::npos) {
+      matches.clear();
+      return;
+    }
+
+    matches.push_back(pos);
+  }
+}
+
 } // namespace fzy

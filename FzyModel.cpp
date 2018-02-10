@@ -90,6 +90,12 @@ void FzyModel::setFilter(const QString &newFilter) {
         m_filterView.push_back(s);
       }
       break;
+
+    case SearchMethod::SimpleFuzzy:
+      if (fzy::simpleFuzzySearch(m_stdFilter, s)) {
+        m_filterView.push_back(s);
+      }
+      break;
     }
   }
 
@@ -155,6 +161,10 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
 
     case SearchMethod::Substr:
       fzy::substrHighlights(m_stdFilter, value, indices);
+      break;
+
+    case SearchMethod::SimpleFuzzy:
+      fzy::simpleFuzzyHighlights(m_stdFilter, value, indices);
       break;
     }
 

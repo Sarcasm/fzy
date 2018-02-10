@@ -15,6 +15,7 @@ class FzyModel : public QAbstractListModel {
   enum SearchMethod {
     StartsWith,
     Substr,
+    SimpleFuzzy,
   };
 
 public:
@@ -38,7 +39,7 @@ private:
   void setFilter(const QString &newFilter);
 
 private:
-  SearchMethod m_searchMethod = SearchMethod::Substr;
+  SearchMethod m_searchMethod = SearchMethod::SimpleFuzzy;
   QString m_filter;
   std::string m_stdFilter;
   std::vector<std::string> m_strings;
