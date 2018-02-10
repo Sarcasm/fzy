@@ -1,17 +1,36 @@
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#include "fzy.h"
 
-#include "FzyModel.h"
+#include <numeric>
 
-int main(int argc, char *argv[]) {
-  QGuiApplication app(argc, argv);
+namespace fzy {
 
-  qmlRegisterType<FzyModel>("com.github.Sarcasm.fzy", 1, 0, "FzyModel");
-
-  QCoreApplication::addLibraryPath("./");
-
-  QQmlApplicationEngine engine;
-  engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-
-  return app.exec();
+bool startsWith(std::string_view prefix, std::string_view str) {
+  return !str.compare(0, prefix.length(), prefix);
 }
+
+void startsWithHighlights(std::string_view prefix, std::string_view str,
+                          std::vector<int> &matches) {
+  if (!startsWith(prefix, str)) {
+    return;
+  }
+
+  matches.resize(prefix.length());
+  std::iota(matches.begin(), matches.end(), 0);
+}
+
+bool substrSearch(std::string_view needle, std::string_view haystack) {
+  return haystack.find(needle) != std::string_view::npos;
+}
+
+void substrHighlights(std::string_view needle, std::string_view haystack,
+                      std::vector<int> &matches) {
+  const auto start_pos = haystack.find(needle);
+  if (start_pos == std::string_view::npos) {
+    return;
+  }
+
+  matches.resize(needle.length());
+  std::iota(matches.begin(), matches.end(), start_pos);
+}
+
+} // namespace fzy
