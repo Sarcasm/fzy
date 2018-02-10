@@ -132,8 +132,13 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
   case Role::Value:
     return QString::fromUtf8(value.data(), value.size());
 
-  case Role::MatchIndices:
-    return QString("some indices");
+  case Role::MatchIndices: {
+    QList<QVariant> indices;
+    for (int i = 0; i < m_filter.count(); ++i) {
+      indices.append(i);
+    }
+    return indices;
+  }
   }
 
   return {};

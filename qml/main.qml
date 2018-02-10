@@ -44,7 +44,18 @@ Window {
             delegate: Text {
                 id: name
                 height: 30
-                text: value
+                text: {
+                    var str = "";
+                    for (var i = 0; i < value.length; ++i) {
+                        if (matchIndices.indexOf(i) != -1) {
+                            str += "<b>" + value[i] + "</b>";
+                        } else {
+                            str += value[i];
+                        }
+                    }
+
+                    return str;
+                }
             }
         }
     }
