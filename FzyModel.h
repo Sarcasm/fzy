@@ -15,7 +15,7 @@ class FzyModel : public QAbstractListModel {
 public:
   enum class Role : int {
     Value = Qt::UserRole + 1,
-    MatchIndices,
+    Highlights,
   };
   Q_ENUM(Role);
 
@@ -34,6 +34,7 @@ private:
 
 private:
   QString m_filter;
+  std::string m_stdFilter;
   std::vector<std::string> m_strings;
   std::vector<std::string_view> m_filterView;
 };

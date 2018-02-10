@@ -1,8 +1,26 @@
 #include "FzyModel.h"
 
-#include <fstream>
+#include <numeric>
+#include <vector>
 
 #include <QMetaEnum>
+
+namespace {
+
+bool startsWith(std::string_view prefix, std::string_view str) {
+  return !str.compare(0, prefix.length(), prefix);
+}
+
+void startsWithHighlights(std::string_view prefix, std::string_view str,
+                       std::vector<int> &matches) {
+  if (!startsWith(prefix, str))
+    return;
+
+  matches.resize(prefix.length());
+  std::iota(matches.begin(), matches.end(), 0);
+}
+
+} // unnamed namespace
 
 FzyModel::FzyModel(QObject *parent) : QAbstractListModel(parent) {
   m_strings = {
@@ -22,6 +40,7 @@ FzyModel::FzyModel(QObject *parent) : QAbstractListModel(parent) {
       "repstopdf",
       "xmode2",
       "cmsutil",
+      "ag",
       "gvfs-monitor-file",
       "ninja",
       "symilar",
@@ -42,6 +61,7 @@ FzyModel::FzyModel(QObject *parent) : QAbstractListModel(parent) {
       "gvfs-save",
       "as",
       "weston-editor",
+      "emacs",
       "emacsclient",
       "weston-confine",
       "dolphin",
@@ -69,13 +89,13 @@ void FzyModel::setFilter(const QString &newFilter) {
   beginResetModel();
 
   m_filter = newFilter;
+  m_stdFilter = m_filter.toStdString();
   emit filterChanged(m_filter);
 
   m_filterView.clear();
   const QByteArray &ba = m_filter.toUtf8();
-  std::string_view prefix(ba.constData(), ba.size());
   for (const auto &s : m_strings) {
-    if (!s.compare(0, prefix.length(), prefix)) {
+    if (startsWith(m_stdFilter, s)) {
       m_filterView.push_back(s);
     }
   }
@@ -106,8 +126,8 @@ QHash<int, QByteArray> FzyModel::roleNames() const {
         roles[v] = QByteArrayLiteral("value");
         break;
 
-      case Role::MatchIndices:
-        roles[v] = QByteArrayLiteral("matchIndices");
+      case Role::Highlights:
+        roles[v] = QByteArrayLiteral("highlights");
         break;
       }
     }
@@ -132,12 +152,14 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
   case Role::Value:
     return QString::fromUtf8(value.data(), value.size());
 
-  case Role::MatchIndices: {
-    QList<QVariant> indices;
-    for (int i = 0; i < m_filter.count(); ++i) {
-      indices.append(i);
+  case Role::Highlights: {
+    std::vector<int> indices;
+    startsWithHighlights(m_stdFilter, value, indices);
+    QList<QVariant> highlights;
+    for (const auto &index : indices) {
+      highlights.push_back(index);
     }
-    return indices;
+    return highlights;
   }
   }
 

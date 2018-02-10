@@ -37,6 +37,8 @@ Window {
 
             clip: true
 
+            // probably not a good idea
+            cacheBuffer: 0
 
             model: FzyModel {
                 filter: textField.text
@@ -45,12 +47,16 @@ Window {
                 id: name
                 height: 30
                 text: {
+                    // first, make a copy, so we don't jump back and forth to C++ ::data()
+                    var v = value;
+                    var hl = highlights;
+
                     var str = "";
-                    for (var i = 0; i < value.length; ++i) {
-                        if (matchIndices.indexOf(i) != -1) {
-                            str += "<b>" + value[i] + "</b>";
+                    for (var i = 0; i < v.length; ++i) {
+                        if (hl.indexOf(i) !== -1) {
+                            str += "<b>" + v[i] + "</b>";
                         } else {
-                            str += value[i];
+                            str += v[i];
                         }
                     }
 
