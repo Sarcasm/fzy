@@ -12,12 +12,28 @@ bool startsWith(std::string_view prefix, std::string_view str) {
 }
 
 void startsWithHighlights(std::string_view prefix, std::string_view str,
-                       std::vector<int> &matches) {
-  if (!startsWith(prefix, str))
+                          std::vector<int> &matches) {
+  if (!startsWith(prefix, str)) {
     return;
+  }
 
   matches.resize(prefix.length());
   std::iota(matches.begin(), matches.end(), 0);
+}
+
+bool substrSearch(std::string_view needle, std::string_view haystack) {
+  return haystack.find(needle) != std::string_view::npos;
+}
+
+void substrHighlights(std::string_view needle, std::string_view haystack,
+                      std::vector<int> &matches) {
+  const auto start_pos = haystack.find(needle);
+  if (start_pos == std::string_view::npos) {
+    return;
+  }
+
+  matches.resize(needle.length());
+  std::iota(matches.begin(), matches.end(), start_pos);
 }
 
 } // unnamed namespace
@@ -95,8 +111,18 @@ void FzyModel::setFilter(const QString &newFilter) {
   m_filterView.clear();
   const QByteArray &ba = m_filter.toUtf8();
   for (const auto &s : m_strings) {
-    if (startsWith(m_stdFilter, s)) {
-      m_filterView.push_back(s);
+    switch (m_searchMethod) {
+    case SearchMethod::StartsWith:
+      if (startsWith(m_stdFilter, s)) {
+        m_filterView.push_back(s);
+      }
+      break;
+
+    case SearchMethod::Substr:
+      if (substrSearch(m_stdFilter, s)) {
+        m_filterView.push_back(s);
+      }
+      break;
     }
   }
 
@@ -154,7 +180,17 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
 
   case Role::Highlights: {
     std::vector<int> indices;
-    startsWithHighlights(m_stdFilter, value, indices);
+
+    switch (m_searchMethod) {
+    case SearchMethod::StartsWith:
+      startsWithHighlights(m_stdFilter, value, indices);
+      break;
+
+    case SearchMethod::Substr:
+      substrHighlights(m_stdFilter, value, indices);
+      break;
+    }
+
     QList<QVariant> highlights;
     for (const auto &index : indices) {
       highlights.push_back(index);

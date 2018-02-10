@@ -12,6 +12,11 @@ class FzyModel : public QAbstractListModel {
   Q_PROPERTY(
       QString filter MEMBER m_filter WRITE setFilter NOTIFY filterChanged)
 
+  enum SearchMethod {
+    StartsWith,
+    Substr,
+  };
+
 public:
   enum class Role : int {
     Value = Qt::UserRole + 1,
@@ -33,6 +38,7 @@ private:
   void setFilter(const QString &newFilter);
 
 private:
+  SearchMethod m_searchMethod = SearchMethod::Substr;
   QString m_filter;
   std::string m_stdFilter;
   std::vector<std::string> m_strings;
