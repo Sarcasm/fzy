@@ -61,6 +61,19 @@ FzyModel::FzyModel(QObject *parent) : QAbstractListModel(parent) {
       "pdflatexpicscale",
   };
 
+  m_strings = {
+    ".travis.yml",
+    "Cask",
+    "company-lsp.el",
+    "LICENSE",
+    "README.md",
+    "readme.md",
+    "momomo.md",
+    "abcm.m.abcm",
+    "test/company-lsp-test.el",
+    "MiamMiam",
+  };
+
   m_filterView.assign(m_strings.begin(), m_strings.end());
 }
 
@@ -93,6 +106,12 @@ void FzyModel::setFilter(const QString &newFilter) {
 
     case SearchMethod::SimpleFuzzy:
       if (fzy::simpleFuzzySearch(m_stdFilter, s)) {
+        m_filterView.push_back(s);
+      }
+      break;
+
+    case SearchMethod::Fuzzy:
+      if (fzy::fuzzySearch(m_stdFilter, s)) {
         m_filterView.push_back(s);
       }
       break;
@@ -165,6 +184,10 @@ QVariant FzyModel::data(const QModelIndex &index, int role) const {
 
     case SearchMethod::SimpleFuzzy:
       fzy::simpleFuzzyHighlights(m_stdFilter, value, indices);
+      break;
+
+    case SearchMethod::Fuzzy:
+      fzy::fuzzyHighlights(m_stdFilter, value, indices);
       break;
     }
 
