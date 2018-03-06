@@ -129,7 +129,7 @@ private slots:
     QCOMPARE(fzy::fuzzySearch(needle, haystack), found);
 
     std::vector<int> matchSet = {1, 2, 3};
-    fzy::fuzzyHighlights2(needle, haystack, matchSet);
+    fzy::fuzzyHighlights(needle, haystack, matchSet);
     QCOMPARE(matchSet, highlights);
   }
 };

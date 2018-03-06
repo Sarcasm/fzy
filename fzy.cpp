@@ -148,52 +148,6 @@ void fuzzyHighlights(std::string_view needle, std::string_view haystack,
                      std::vector<int> &matches) {
   matches.clear();
 
-  std::vector<std::vector<int>> vecs;
-  std::vector<int> it;
-  std::string_view::size_type pos = 0;
-  for (auto ch : needle) {
-    pos = haystack.find(ch, pos);
-    if (pos == std::string_view::npos) {
-      // FIXME: should not happen if matched initially, could assert?
-      return;
-    }
-
-    it.push_back(pos);
-    ++pos;
-  }
-
-  vecs.push_back(it);
-  it.clear();
-
-  // find max
-  for (auto chit = needle.rbegin(); chit != needle.rend(); ++chit) {
-    auto ch = *chit;
-    // FIXME: no need to look before the last match from previous
-    auto fit = std::find(haystack.rbegin(), haystack.rend(), ch);
-    // no need to check for rend()
-    auto n = haystack.size() - (fit - haystack.rbegin()) - 1;
-    it.push_back(n);
-  }
-
-  // one match only
-  if (it == vecs[0]) {
-    matches.swap(vecs[0]);
-    return;
-  }
-
-  vecs.push_back(it);
-
-  if (fuzzyLess(haystack, vecs[0], vecs[1])) {
-    matches = vecs[1];
-  } else {
-    matches = vecs[0];
-  }
-}
-
-void fuzzyHighlights2(std::string_view needle, std::string_view haystack,
-                     std::vector<int> &matches) {
-  matches.clear();
-
   std::vector<int> minMatches;
   std::string_view::size_type pos = 0;
   for (auto ch : needle) {
