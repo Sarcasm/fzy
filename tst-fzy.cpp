@@ -106,31 +106,61 @@ private slots:
 
   void fuzzyMatch_data() {
     QTest::addColumn<std::string_view>("needle");
-    QTest::addColumn<std::string_view>("haystack");
-    QTest::addColumn<bool>("found");
-    QTest::addColumn<std::vector<int>>("highlights");
+    QTest::addColumn<std::string_view>("highlightedHaystack");
 
-    auto row = [this](auto name, std::string_view needle,
-                      std::string_view haystack, bool found,
-                      const std::vector<int> &highlights) {
-      QTest::newRow(name) << needle << haystack << found << highlights;
-    };
+    using namespace std::literals;
 
-    row("test1", "abc", "abcabc", true, {0, 1, 2});
-    row("test2", "abc", "aabbcc", true, {0, 2, 4});
+    QTest::newRow("test1") << "abc"sv
+                           << "[abc]abc"sv;
+    QTest::newRow("test2") << "abc"sv
+                           << "[a]a[b]b[c]c"sv;
   }
 
   void fuzzyMatch() {
     QFETCH(std::string_view, needle);
-    QFETCH(std::string_view, haystack);
-    QFETCH(bool, found);
-    QFETCH(std::vector<int>, highlights);
+    QFETCH(std::string_view, highlightedHaystack);
 
+    std::string haystack;
+    for (char ch : highlightedHaystack) {
+      if (ch != '[' && ch != ']') {
+        haystack += ch;
+      }
+    }
+
+    bool found = highlightedHaystack.find('[') != std::string_view::npos;
     QCOMPARE(fzy::fuzzySearch(needle, haystack), found);
 
     std::vector<int> matchSet = {1, 2, 3};
     fzy::fuzzyHighlights(needle, haystack, matchSet);
-    QCOMPARE(matchSet, highlights);
+
+    std::string highlightedResult;
+    bool inHighlight = false;
+    for (unsigned i = 0; i < haystack.size(); ++i) {
+      if (std::find(matchSet.begin(), matchSet.end(), i) != matchSet.end()) {
+        if (!inHighlight) {
+          highlightedResult += '[';
+        }
+        inHighlight = true;
+      } else {
+        if (inHighlight) {
+          highlightedResult += ']';
+        }
+        inHighlight = false;
+      }
+
+      highlightedResult += haystack[i];
+    }
+
+    // convert to QString so comparison failures show the characters
+
+    auto hlActual = QString::fromUtf8(QByteArray::fromRawData(
+        highlightedResult.data(), highlightedResult.size()));
+
+    auto hlExpected = QString::fromUtf8(QByteArray::fromRawData(
+        highlightedHaystack.data(), highlightedHaystack.size()));
+
+    QCOMPARE(hlActual, hlExpected);
+  }
   }
 };
 
