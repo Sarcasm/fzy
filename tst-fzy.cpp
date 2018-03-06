@@ -103,6 +103,35 @@ private slots:
     fzy::simpleFuzzyHighlights(needle, haystack, matchSet);
     QCOMPARE(matchSet, highlights);
   }
+
+  void fuzzyMatch_data() {
+    QTest::addColumn<std::string_view>("needle");
+    QTest::addColumn<std::string_view>("haystack");
+    QTest::addColumn<bool>("found");
+    QTest::addColumn<std::vector<int>>("highlights");
+
+    auto row = [this](auto name, std::string_view needle,
+                      std::string_view haystack, bool found,
+                      const std::vector<int> &highlights) {
+      QTest::newRow(name) << needle << haystack << found << highlights;
+    };
+
+    row("test1", "abc", "abcabc", true, {0, 1, 2});
+    row("test2", "abc", "aabbcc", true, {0, 1, 2});
+  }
+
+  void fuzzyMatch() {
+    QFETCH(std::string_view, needle);
+    QFETCH(std::string_view, haystack);
+    QFETCH(bool, found);
+    QFETCH(std::vector<int>, highlights);
+
+    QCOMPARE(fzy::fuzzySearch(needle, haystack), found);
+
+    std::vector<int> matchSet = {1, 2, 3};
+    fzy::fuzzyHighlights2(needle, haystack, matchSet);
+    QCOMPARE(matchSet, highlights);
+  }
 };
 
 QTEST_MAIN(TestFzy)

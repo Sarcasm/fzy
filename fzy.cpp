@@ -1,6 +1,7 @@
 #include "fzy.h"
 
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 
 namespace fzy {
@@ -38,11 +39,18 @@ void substrHighlights(std::string_view needle, std::string_view haystack,
 
 bool simpleFuzzySearch(std::string_view needle, std::string_view haystack) {
   std::string_view::size_type pos = 0;
+
+  if (needle.size() > haystack.size()) {
+    return false;
+  }
+
   for (auto ch : needle) {
     pos = haystack.find(ch, pos);
     if (pos == std::string_view::npos) {
       return false;
     }
+
+    ++pos;
   }
 
   return true;
@@ -60,6 +68,7 @@ void simpleFuzzyHighlights(std::string_view needle, std::string_view haystack,
     }
 
     matches.push_back(pos);
+    ++pos;
   }
 }
 
@@ -70,6 +79,8 @@ bool fuzzySearch(std::string_view needle, std::string_view haystack) {
     if (pos == std::string_view::npos) {
       return false;
     }
+
+    ++pos;
   }
 
   return true;
@@ -128,7 +139,7 @@ bool fuzzyLess(std::string_view haystack, const std::vector<int> &a,
                          [&](const auto &idx) { return startOfWordsLUT[idx]; });
   };
 
-  return countWordBeginnings(a) < countWordBeginnings(b);
+  return countWordBeginnings(a) > countWordBeginnings(b);
 }
 
 } // unnamed namespace
@@ -148,6 +159,7 @@ void fuzzyHighlights(std::string_view needle, std::string_view haystack,
     }
 
     it.push_back(pos);
+    ++pos;
   }
 
   vecs.push_back(it);
@@ -175,6 +187,84 @@ void fuzzyHighlights(std::string_view needle, std::string_view haystack,
     matches = vecs[1];
   } else {
     matches = vecs[0];
+  }
+}
+
+void fuzzyHighlights2(std::string_view needle, std::string_view haystack,
+                     std::vector<int> &matches) {
+  matches.clear();
+
+  std::vector<int> minMatches;
+  std::string_view::size_type pos = 0;
+  for (auto ch : needle) {
+    pos = haystack.find(ch, pos);
+    if (pos == std::string_view::npos) {
+      // FIXME: should not happen if matched initially, could assert?
+      return;
+    }
+
+    minMatches.push_back(pos);
+    ++pos;
+  }
+
+  std::vector<std::vector<int>> vecs;
+
+  for (int minMatch : minMatches) {
+    vecs.push_back({minMatch});
+  }
+
+  int maxPos = haystack.size();
+  for (unsigned i = vecs.size(); i != 0; --i) {
+    std::vector<int> &vec = vecs[i - 1];
+    char ch = needle[i - 1];
+
+    for (int j = vec[0] + 1; j < maxPos; ++j) {
+      if (haystack[j] == ch) {
+        vec.push_back(j);
+      }
+    }
+    maxPos = vec.back();
+  }
+
+  std::vector<int> mins(vecs.size());
+  std::vector<int> indices(vecs.size());
+  bool done = false;
+
+  auto increment = [&mins, &indices, &vecs, &done]() mutable {
+    for (int i = vecs.size() - 1; i >= 0; --i) {
+      if ((indices[i] + 1) == static_cast<int>(vecs[i].size())) {
+        indices[i] = mins[i];
+        continue;
+      }
+
+      ++indices[i];
+
+      if ((i + 1) != static_cast<int>(vecs.size())) {
+        while (vecs[i][indices[i]] > vecs[i + 1][indices[i + 1]]) {
+          ++indices[i + 1];
+        }
+        mins[i + 1] = indices[i + 1];
+      }
+
+      return;
+    }
+
+    done = true;
+  };
+
+  // could be more optimal
+  matches = minMatches;
+
+  increment(); // skip minMatches
+  for (; !done; increment()) {
+    std::vector<int> it;
+    for (unsigned i = 0; i < vecs.size(); ++i) {
+      it.push_back(vecs[i][indices[i]]);
+    }
+
+    if (fuzzyLess(haystack, it, matches)) {
+      matches = it;
+    }
   }
 }
 

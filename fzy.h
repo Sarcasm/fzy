@@ -21,6 +21,8 @@ void simpleFuzzyHighlights(std::string_view needle, std::string_view haystack,
 bool fuzzySearch(std::string_view needle, std::string_view haystack);
 void fuzzyHighlights(std::string_view needle, std::string_view haystack,
                      std::vector<int> &matches);
+void fuzzyHighlights2(std::string_view needle, std::string_view haystack,
+                      std::vector<int> &matches);
 
 } // namespace fzy
 
