@@ -117,7 +117,7 @@ private slots:
     };
 
     row("test1", "abc", "abcabc", true, {0, 1, 2});
-    row("test2", "abc", "aabbcc", true, {0, 1, 2});
+    row("test2", "abc", "aabbcc", true, {0, 2, 4});
   }
 
   void fuzzyMatch() {
